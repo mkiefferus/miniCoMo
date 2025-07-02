@@ -2,3 +2,7 @@
 # Folders
 
 [Dd]ata/
+
+# Files
+
+*.pyc

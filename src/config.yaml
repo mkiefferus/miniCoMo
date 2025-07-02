@@ -1,0 +1,13 @@
+collab_n_agents: 2
+
+model: SimpleAutoencoder(CollabConfig(state_size=16, num_heads=2, encoding_dim=64, 
+  collab_n_agents=${collab_n_agents}, collab_message_size=32, collab_dec_depth=2))
+
+# Training
+
+seed: 0
+epochs: 1
+batch_size: 64
+
+num_workers: 0
+save_dir: 'output'
