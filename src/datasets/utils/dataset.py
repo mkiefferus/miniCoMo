@@ -17,22 +17,41 @@ class simpleDataset(Dataset):
         self.y = y[:num_samples] if num_samples is not None else y
         self.training = training
 
-    def _augment(self, x: torch.Tensor) -> torch.Tensor:
+    def _process(self, x: torch.Tensor) -> torch.Tensor:
+        
+        # ===== Augment data =====
 
-        # Random rotation
-        angle = random.choice([0, 90, 180, 270])
-        x = TF.rotate(x, angle)
+        if self.training:
+            # Random rotation
+            angle = random.choice([0, 90, 180, 270])
+            x = TF.rotate(x, angle)
+            
+            # Random horizontal flip
+            if random.random() < 0.5:
+                x = TF.hflip(x)
 
-        return x
+            # Random vertical flip
+            if random.random() < 0.5:
+                x = TF.vflip(x)
+
+        # ===== Split Image =====
+
+        h, w = x.shape[1:3]
+        left = x[:, :, :w//2]
+        right = x[:, :, w//2:]
+
+
+        # Randomly swap left and right
+        if self.training and random.random() < 0.5:
+            left, right = right, left
+
+        return left, right, x
 
     def __len__(self) -> int:
         return self.x.size(0)
 
     def __getitem__(self, idx: int):
         img = self.x[idx]
-        # if self.training: img = self._augment(img)
-
-        left = img[:, :, :14]
-        right = img[:, :, 14:]
+        left, right, img = self._process(img)
 
         return dict(left=left, right=right, gt_img=img, label=self.y[idx])
