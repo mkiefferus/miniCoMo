@@ -41,12 +41,15 @@ def train(cfg):
             img = [l, r]
 
             gt = batch['gt_img'].to(device)
+            left = gt[:, :, :, :14]
+            right = gt[:, :, :, 14:]
+            gt = [left, right]
 
             # Forward pass
             outputs = model(img)
             
             total_loss = 0.0
-            for agent_pred, agent_gt in zip(outputs, img):
+            for agent_pred, agent_gt in zip(outputs, gt):
                 loss = criterion(agent_pred, agent_gt)
                 total_loss += loss
 
@@ -88,7 +91,8 @@ def train(cfg):
                     axs[i, j].axis('off')
 
             plt.tight_layout(pad=0.5)
-            plt.show()
+            plt.savefig('output_comparison.png')  # Save to file
+            plt.close()
             break
 
 

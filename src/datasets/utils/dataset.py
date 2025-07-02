@@ -26,13 +26,13 @@ class simpleDataset(Dataset):
             angle = random.choice([0, 90, 180, 270])
             x = TF.rotate(x, angle)
             
-            # Random horizontal flip
-            if random.random() < 0.5:
-                x = TF.hflip(x)
+            # # Random horizontal flip
+            # if random.random() < 0.5:
+            #     x = TF.hflip(x)
 
-            # Random vertical flip
-            if random.random() < 0.5:
-                x = TF.vflip(x)
+            # # Random vertical flip
+            # if random.random() < 0.5:
+            #     x = TF.vflip(x)
 
         # ===== Split Image =====
 
