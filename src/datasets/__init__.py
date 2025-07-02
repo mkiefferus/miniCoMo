@@ -8,14 +8,15 @@ from torch.utils.data import DataLoader
 def get_data_loader(dataset: Any,
                     batch_size: int,
                     num_workers: int = 8,
-                    shuffle: bool = True,
-                    drop_last: bool = True):
+                    train: bool = True,
+                    drop_last: bool = True,
+                    **kwargs):
     if isinstance(dataset, str):
-        dataset = eval(dataset)()
+        dataset = eval(dataset)(train=train, **kwargs)
 
     return DataLoader(dataset,
                       batch_size=batch_size,
-                      shuffle=shuffle,
+                      shuffle=not train,
                       drop_last=drop_last,
                       num_workers=num_workers,
                       pin_memory=True)
