@@ -40,18 +40,25 @@ class simpleDataset(Dataset):
         left = x[:, :, :w//2]
         right = x[:, :, w//2:]
 
+        gt_left = left.clone()
+        gt_right = right.clone()
 
         # Randomly swap left and right
-        if self.training and random.random() < 0.5:
-            left, right = right, left
+        if self.training:
+            if random.random() < 0.5:
+                left, right = right, left
 
-        return left, right, x
+        return left, right, gt_left, gt_right
 
     def __len__(self) -> int:
         return self.x.size(0)
 
     def __getitem__(self, idx: int):
         img = self.x[idx]
-        left, right, img = self._process(img)
+        left, right, gt_left, gt_right = self._process(img)
 
-        return dict(left=left, right=right, gt_img=img, label=self.y[idx])
+        return dict(left=left, 
+                    right=right, 
+                    gt_left=gt_left, 
+                    gt_right=gt_right, 
+                    label=self.y[idx])

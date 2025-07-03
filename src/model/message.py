@@ -4,6 +4,39 @@ import torch.nn.functional as F
 
 from .blocks import DecoderBlock
 
+import torch
+import torch.nn as nn
+
+
+class SimpleCollaborativeMessage(nn.Module):
+    def __init__(self, 
+                 state_size,
+                 message_size,
+                 norm_layer=nn.LayerNorm,
+    ) -> None: 
+        
+        super().__init__()
+
+        self.encoder_proj = nn.Linear(state_size, message_size)
+        self.decoder_proj = nn.Linear(message_size, state_size)
+        self.norm = norm_layer(state_size)
+
+    def encode(self, state, ext_features=None):
+        mean_state = state.mean(dim=1)
+        message = self.encoder_proj(mean_state)
+        return message.unsqueeze(1)
+
+    def decode(self, state, ext_features, training:bool=False):
+        message = ext_features.squeeze(1).squeeze(1)
+        update_vector = self.decoder_proj(message)
+        update_vector = update_vector.unsqueeze(1)
+        
+        updated_state = state + update_vector
+        updated_state = self.norm(updated_state)
+
+        return updated_state, ext_features
+
+    
 class CollaborativeMessage(nn.Module):
     """
     Collaborative message module.

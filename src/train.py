@@ -40,16 +40,15 @@ def train(cfg):
             r = batch['right'].to(device)
             img = [l, r]
 
-            gt = batch['gt_img'].to(device)
-            left = gt[:, :, :, :14]
-            right = gt[:, :, :, 14:]
-            gt = [left, right]
+            gt_l = batch['gt_left'].to(device)
+            gt_r = batch['gt_right'].to(device)
+            gt = [gt_l, gt_r]
 
             # Forward pass
             outputs = model(img)
             
             total_loss = 0.0
-            for agent_pred, agent_gt in zip(outputs, gt):
+            for agent_pred, agent_gt in zip(outputs, gt[:len(outputs)]):
                 loss = criterion(agent_pred, agent_gt)
                 total_loss += loss
 
@@ -69,11 +68,16 @@ def train(cfg):
         for batch in test_dataloader:
             left = batch['left'].to(device)
             right = batch['right'].to(device)
-            gt = batch['gt_img'].to(device)
+            img = [left, right][:model.collab_n_agents]
+            
+            gt_l = batch['gt_left'].to(device)
+            gt_r = batch['gt_right'].to(device)
+            gt = [gt_l, gt_r][:model.collab_n_agents]
+            gt = torch.cat(gt, dim=3)
 
             h, w = gt.shape[2:]
 
-            img = [left, right]
+            # Forward pass
             pred = model(img)
             pred = torch.cat(pred, dim=3)  # Concatenate predictions from both agents
             pred = pred.view(-1, 1, h, w)

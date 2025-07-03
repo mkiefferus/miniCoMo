@@ -1,13 +1,13 @@
-collab_n_agents: 2 # No other config works atm
+collab_n_agents: 2
 
-model: CollaborativeAutoencoder(CollabConfig(state_size=16, num_heads=2, encoding_dim=64, 
-  collab_n_agents=${collab_n_agents}, collab_message_size=64, collab_dec_depth=2))
+model: CollaborativeAutoencoder(CollabConfig(state_size=16, num_heads=4, encoding_dim=128, 
+  collab_n_agents=${collab_n_agents}, collab_message_size=128, collab_dec_depth=4))
 
 # Training
 
 seed: 0
-epochs: 1
-batch_size: 64
+epochs: 2
+batch_size: 128
 
 num_workers: 0
 save_dir: 'output'

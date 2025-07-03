@@ -6,7 +6,7 @@ from functools import partial
 from math import prod
 
 from .blocks import DecoderBlock
-from .message import CollaborativeMessage
+from .message import CollaborativeMessage, SimpleCollaborativeMessage
 
 class CollabConfig:
     def __init__(self, 
@@ -23,6 +23,16 @@ class CollabConfig:
         self.collab_n_agents = collab_n_agents
         self.collab_message_size = collab_message_size
         self.collab_dec_depth = collab_dec_depth
+
+class SimpleModel(nn.Module):
+    def save(self, path):
+        torch.save(
+            dict(
+                state_dict=self.state_dict(), 
+                
+            ),
+            path,
+        )
 
 class SimpleAutoencoder(nn.Module):
     def __init__(self, 
@@ -110,26 +120,28 @@ class CollaborativeAutoencoder(nn.Module):
         super().__init__()
 
         self.collab_n_agents = config.collab_n_agents
-        assert self.collab_n_agents == 2, "Only 2 agents are supported for now."
+        assert self.collab_n_agents <= 2, "Only 2 agents are supported for now."
         
         self.multi = self.collab_n_agents > 1
         self.collab_message_size = config.collab_message_size
         self.collab_dec_depth = config.collab_dec_depth
 
-        self.collab_modules = nn.ModuleList([
-            CollaborativeMessage(
-                state_size=config.encoding_dim,
-                message_size=config.collab_message_size,
-                n_agents=config.collab_n_agents,
-                num_heads=config.num_heads,
-                depth=config.collab_dec_depth,
-                mlp_ratio=4.0,
-                qkv_bias=True,
-                drop_message=0.0,
-                norm_layer=partial(nn.LayerNorm, eps=1e-6),
-            )
-            for _ in range(self.collab_n_agents)
-        ])
+        if self.multi:
+            self.collab_modules = nn.ModuleList([
+                CollaborativeMessage(
+                    state_size=config.encoding_dim,
+                    message_size=config.collab_message_size,
+                    n_agents=config.collab_n_agents,
+                    num_heads=config.num_heads,
+                    depth=config.collab_dec_depth,
+                    mlp_ratio=4.0,
+                    qkv_bias=True,
+                    drop_message=0.0,
+                    norm_layer=partial(nn.LayerNorm, eps=1e-6),
+                )
+                for _ in range(self.collab_n_agents)
+            ])
+        else: self.collab_modules = [None]
 
         input_dim = (28, 14)
         self.agents = nn.ModuleList([
@@ -150,8 +162,11 @@ class CollaborativeAutoencoder(nn.Module):
             state, img_enc = agent.encoder(img)
 
             if self.multi:
-                ext_features = collab_mod.encode(state, None)
+                norm_state = agent.norm_state(state)
+                ext_features = collab_mod.encode(norm_state, None)
                 agent_messages.append(ext_features)
+            else:
+                agent_messages.append(None)
             
             agent_state.append(state)
             agent_img_enc.append(img_enc)
@@ -171,4 +186,6 @@ class CollaborativeAutoencoder(nn.Module):
             pred = agent.decoder(img_enc, state)
             preds.append(pred)
 
-        return preds[::-1]
+        if self.multi:
+            return preds[::-1]
+        return preds
