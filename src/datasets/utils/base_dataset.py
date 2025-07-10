@@ -3,9 +3,10 @@ from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
 import random
 
+from .easy_dataset import EasyDataset
 
 
-class simpleDataset(Dataset):
+class BaseDataset(Dataset, EasyDataset):
     """Stores tensors x (features) and y (labels)."""
     def __init__(self, 
                  x: torch.Tensor, 
@@ -25,14 +26,6 @@ class simpleDataset(Dataset):
             # Random rotation
             angle = random.choice([0, 90, 180, 270])
             x = TF.rotate(x, angle)
-            
-            # # Random horizontal flip
-            # if random.random() < 0.5:
-            #     x = TF.hflip(x)
-
-            # # Random vertical flip
-            # if random.random() < 0.5:
-            #     x = TF.vflip(x)
 
         # ===== Split Image =====
 

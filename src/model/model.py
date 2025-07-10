@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from functools import partial
+import copy
 
 from pathlib import Path
 from omegaconf import OmegaConf
@@ -62,10 +63,9 @@ class SimpleModel(nn.Module):
 
     def save(self, train_config, epoch:int=0, model_name="model", save_best=False):
         out_path = Path(train_config.out_dir) / f"{model_name}.pth"
-        print(f"saving model with state_dict, args and epoch")
         torch.save(
             dict(
-                state_dict=self.state_dict() if not save_best else self.best['model'].state_dict(), 
+                state_dict=self.state_dict() if not save_best else self.best['model'], 
                 args=train_config,
                 epoch=epoch if not save_best else self.best['epoch'],
             ),
@@ -73,21 +73,26 @@ class SimpleModel(nn.Module):
         )
         print(f">> Saving model to {out_path} ...")
 
+    def check_best(self, score, epoch=0):
+        self.is_best(score, epoch)
+
     def is_best(self, score, epoch=0):
         is_best = False
         if self.best['score'] is None or score > self.best['score']:
-            self.best['model'] = self.state_dict()
+            self.best['model'] = copy.deepcopy(self.state_dict())
             self.best['score'] = score
             self.best['epoch'] = epoch
-            print(f">> New best model found with score {score} at epoch {epoch}.")
+            print(f">> New best model found with score {score:.4f} at epoch {epoch}.")
 
             is_best = True
         return is_best
 
-    def load(self, path, device='cpu'):
-        ckpt = torch.load(path, map_location="cpu", weights_only=False)
-        args = ckpt["args"]
-        print(args)
+    def load_best(self):
+        if self.best['model'] is not None:
+            self.load_state_dict(self.best['model'])
+            print(f">> Loaded best model with score {self.best['score']:.4f} at epoch {self.best['epoch']}.")
+        else:
+            print("No best model found.")
 
 
 class SimpleAutoencoder(SimpleModel):

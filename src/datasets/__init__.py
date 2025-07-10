@@ -12,7 +12,7 @@ def get_data_loader(dataset: Any,
                     drop_last: bool = True,
                     **kwargs):
     if isinstance(dataset, str):
-        dataset = eval(dataset)(train=train, **kwargs)
+        dataset = eval(dataset)
 
     return DataLoader(dataset,
                       batch_size=batch_size,

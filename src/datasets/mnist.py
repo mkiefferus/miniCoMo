@@ -5,14 +5,14 @@ import torch
 
 import os.path as osp
 
-from .utils.dataset import simpleDataset
+from .utils.base_dataset import BaseDataset
 
 
-class MNISTDataset(simpleDataset):
-    def __init__(self, root: str = "data/mnist", train: bool = True, **kwargs):
+class MNISTDataset(BaseDataset):
+    def __init__(self, ROOT: str = "data/mnist", train: bool = True, **kwargs):
         split = "train" if train else "t10k"
-        imgs = osp.join(root, f"{split}-images-idx3-ubyte/{split}-images-idx3-ubyte")
-        lbls = osp.join(root, f"{split}-labels-idx1-ubyte/{split}-labels-idx1-ubyte")
+        imgs = osp.join(ROOT, f"{split}-images-idx3-ubyte/{split}-images-idx3-ubyte")
+        lbls = osp.join(ROOT, f"{split}-labels-idx1-ubyte/{split}-labels-idx1-ubyte")
         images, labels = self._read(imgs, lbls)
         x = torch.from_numpy(images).unsqueeze(1).float() / 255
         y = torch.tensor(labels, dtype=torch.long)
