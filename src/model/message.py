@@ -4,10 +4,6 @@ import torch.nn.functional as F
 
 from .blocks import DecoderBlock
 
-import torch
-import torch.nn as nn
-
-
 class SimpleCollaborativeMessage(nn.Module):
     def __init__(self, 
                  state_size,

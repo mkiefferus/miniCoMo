@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+
 from omegaconf import OmegaConf
 import pathlib
 
@@ -15,10 +17,21 @@ from model.model import (
     CollabConfig
 )
 
+def _prepare_output_folders(cfg):
+    out_dir = Path(cfg.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    log_dir = Path(cfg.log_dir)
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+
 def train(cfg):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+
+    # Create output directories
+    _prepare_output_folders(cfg)
 
     train_dataloader = get_data_loader('MNISTDataset', batch_size=cfg.batch_size, num_workers=cfg.num_workers, train=True, drop_last=True)
     test_dataloader = get_data_loader('MNISTDataset', 16, 0, train=True, drop_last=True)
@@ -61,7 +74,8 @@ def train(cfg):
 
         epoch_loss = running_loss / len(train_dataloader)
         print(f'Epoch [{epoch+1}/{cfg.epochs}], Loss: {epoch_loss:.4f}')
-    
+
+    model.save(cfg, epoch=epoch)
 
     model.eval()
     with torch.no_grad():

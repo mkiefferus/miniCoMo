@@ -1,13 +1,16 @@
 collab_n_agents: 2
 
 model: CollaborativeAutoencoder(CollabConfig(state_size=16, num_heads=4, encoding_dim=128, 
-  collab_n_agents=${collab_n_agents}, collab_message_size=128, collab_dec_depth=4))
+  collab_n_agents=${collab_n_agents}, collab_message_size=128, collab_dec_depth=4, collab_messenger='SimpleCollaborativeMessage'))
 
 # Training
 
 seed: 0
-epochs: 2
+epochs: 1
 batch_size: 128
 
 num_workers: 0
 save_dir: 'output'
+out_name: 'collab_debug'
+out_dir: ./${save_dir}/${out_name}/ 
+log_dir: ./${save_dir}/${out_name}/logs
