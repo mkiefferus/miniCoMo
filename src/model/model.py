@@ -22,6 +22,7 @@ def _load_model(path:Path, device='cpu'):
     args = ckpt["args"]
     OmegaConf.resolve(args)
     net = eval(args.model).to(device)
+    net.load_state_dict(ckpt["state_dict"], strict=False)
 
     del ckpt # Free memory
     return net, args, epoch
@@ -227,6 +228,64 @@ class CollaborativeAutoencoder(SimpleModel):
             return _load_model(path, device=device)
         else:
             raise FileNotFoundError(f"Model path {path} does not exist.")
+    
+    def save_single_agent(self, train_config, epoch: int = 0):
+        """Save first collab agent."""
+        single_agent_state_dict = {}
+        
+        for key, value in self.state_dict().items():
+            if key.startswith("agents.0."):
+                new_key = "agent." + key[len("agents.0."):]
+                single_agent_state_dict[new_key] = value
+            elif self.multi and key.startswith("collab_modules.0."):
+                new_key = "collab_module." + key[len("collab_modules.0."):]
+                single_agent_state_dict[new_key] = value
+
+        out_path = Path(train_config.out_dir) / f"single_agent.pth"
+        torch.save(
+            dict(
+                state_dict=single_agent_state_dict, 
+                args=train_config,
+                epoch=epoch,
+            ),
+            out_path,
+        )
+        print(f">> Saving single-agent model to {out_path} ...")
+
+    @classmethod
+    def load_single_agent(cls, path: str, cfg, device='cpu'):
+        """Load single agent model and broadcast weights to all agents."""
+        # Load model
+        print(cfg)
+        model = eval(cfg.model)
+
+        # Load single agent checkpoint
+        ckpt = torch.load(path, map_location='cpu', weights_only=False)
+        single_agent_state_dict = ckpt['state_dict']
+        current_epoch = ckpt.get('epoch', 0)
+        
+        # Build new state dict by broadcasting the weights
+        broadcast_state_dict = {}
+        multi_agent = cfg.collab_n_agents > 1
+
+        for key, value in single_agent_state_dict.items():
+            if key.startswith("agent."):
+                base_key = key[len("agent."):]
+                for i in range(cfg.collab_n_agents):
+                    new_key = f"agents.{i}.{base_key}"
+                    broadcast_state_dict[new_key] = value
+            elif multi_agent and key.startswith("collab_module."):
+                base_key = key[len("collab_module."):]
+                for i in range(cfg.collab_n_agents):
+                    new_key = f"collab_modules.{i}.{base_key}"
+                    broadcast_state_dict[new_key] = value
+        
+        # Load broadcasted state dict into model
+        model.load_state_dict(broadcast_state_dict, strict=False)
+        print(f"Successfully created model and broadcasted weights from {path}.")
+
+        del ckpt  # Free memory
+        return model.to(device), None, current_epoch
         
     def forward(self, x):
 
