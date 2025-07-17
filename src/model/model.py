@@ -10,7 +10,11 @@ from omegaconf import OmegaConf
 from math import prod
 
 from .blocks import DecoderBlock
-from .message import CollaborativeMessage, SimpleCollaborativeMessage
+from .collab import (
+    CollabConfig,
+    CollaborativeMessage, 
+    SimpleCollaborativeMessage,
+)
 
 def _load_model(path:Path, device='cpu'):
     """Load a model from a given path."""
@@ -28,27 +32,7 @@ def _load_model(path:Path, device='cpu'):
     del ckpt # Free memory
     return net, args, epoch
 
-class CollabConfig:
-    def __init__(self, 
-                 state_size=16, 
-                 num_heads=2, 
-                 encoding_dim=64,
-                 img_size=(28, 14),
-                 collab_n_agents=2,         # Number of collaborating agents
-                 collab_message_size=32,    # Size of the collaborative message
-                 collab_dec_depth=2,        # Depth of the collaborative decoder
-                 collab_messenger="CollaborativeMessage",
-                 ):       
-        self.state_size = state_size
-        self.num_heads = num_heads
-        self.encoding_dim = encoding_dim
-        self.img_size = img_size
-        self.collab_n_agents = collab_n_agents
-        self.collab_message_size = collab_message_size
-        self.collab_dec_depth = collab_dec_depth
-        self.collab_messenger = collab_messenger
-
-class SimpleModel(nn.Module):
+class BaseModel(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -95,7 +79,7 @@ class SimpleModel(nn.Module):
             print("No best model found.")
 
 
-class SimpleAutoencoder(SimpleModel):
+class SimpleAutoencoder(BaseModel):
     def __init__(self, 
                  config: CollabConfig):
         
@@ -177,7 +161,7 @@ class SimpleAutoencoder(SimpleModel):
 
         
 
-class CollaborativeAutoencoder(SimpleModel):
+class CollaborativeAutoencoder(BaseModel):
     def __init__(self, 
                  config: CollabConfig):
         

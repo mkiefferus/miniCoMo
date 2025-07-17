@@ -1,3 +1,4 @@
+import torch
 import matplotlib.pyplot as plt
 
 def show_images(images, title_texts):
@@ -16,24 +17,39 @@ def show_images(images, title_texts):
     plt.show()
 
 
+def vis_model_output(model, dataloader, output="example_output.png", device='cpu'):
+    model.eval()
+    with torch.no_grad():
+        for batch in dataloader:
+            left = batch['left'].to(device)
+            right = batch['right'].to(device)
+            img = [left, right][:model.collab_n_agents]
+            
+            gt_l = batch['gt_left'].to(device)
+            gt_r = batch['gt_right'].to(device)
+            gt = [gt_l, gt_r][:model.collab_n_agents]
+            gt = torch.cat(gt, dim=3)
 
-# import sys
-# import os
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+            h, w = gt.shape[2:]
 
-# import torch
-# from datasets import get_data_loader
-# dataloader = get_data_loader('MNISTDataset', 16, 0, True, True)
+            # Forward pass
+            pred = model(img)
+            pred = torch.cat(pred, dim=3)  # Concatenate predictions from both agents
+            pred = pred.view(-1, 1, h, w)
 
+            # move to CPU for matplotlib
+            gt, pred = gt.cpu(), pred.cpu()
 
-# # Get first batch
-# batch = next(iter(dataloader))
-# left, right, gt, labels = batch['left'], batch['right'], batch['gt_img'], batch['label']
+            n = min(6, gt.size(0))
+            fig, axs = plt.subplots(n, 2, figsize=(4.5, n*1.5))
 
-# images = [torch.cat([l, r], dim=-1) for l, r in zip(left, right)]  # Concatenate left and right halves
+            for i in range(n):
+                axs[i, 0].imshow(gt[i, 0], cmap='gray')
+                axs[i, 1].imshow(pred[i, 0], cmap='gray')
+                for j in range(2):
+                    axs[i, j].axis('off')
 
-# # Remove channel dim and convert to numpy
-# images_2_show = [img[0].numpy() for img in images]
-# titles_2_show = [f"label = {label.item()}" for label in labels]
-
-# show_images(images_2_show, titles_2_show)
+            plt.tight_layout(pad=0.5)
+            plt.savefig(output)  # Save to file
+            plt.close()
+            break

@@ -1,7 +1,7 @@
 collab_n_agents: 2
 
 model: CollaborativeAutoencoder(CollabConfig(state_size=16, num_heads=4, encoding_dim=128, 
-  collab_n_agents=${collab_n_agents}, collab_message_size=128, collab_dec_depth=4, collab_messenger='SimpleCollaborativeMessage'))
+  collab_n_agents=${collab_n_agents}, collab_message_size=128, collab_dec_depth=4, collab_messenger='CollaborativeMessage'))
 
 # Datasets
 
@@ -18,7 +18,7 @@ train_criterion: MSELoss()
 test_criterion: MSELoss()
 
 seed: 0
-epochs: 2
+epochs: 4
 batch_size: 128
 num_workers: 0
 

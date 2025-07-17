@@ -2,8 +2,14 @@ name: minicomo
 channels:
   - conda-forge
   - defaults
+  - pytorch
 dependencies:
   - python=3.11.11
   - pip
   - pip:
     - torch==2.6.0
+    - torchvision
+    - numpy
+    - matplotlib
+    - tqdm
+    - omegaconfcl

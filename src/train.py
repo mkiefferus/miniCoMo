@@ -12,6 +12,7 @@ import pathlib
 from tqdm import tqdm
 
 from datasets import get_data_loader
+from tools.visualisation import vis_model_output
 from model.model import (
     SimpleAutoencoder, 
     CollaborativeAutoencoder,
@@ -122,7 +123,7 @@ def train(cfg):
             train_one_epoch(model, train_dataloader, train_criterion, optimiser, device, epoch, cfg.epochs)
 
             # Test after each epoch
-            test_loss, test_acc = test_one_epoch(model, test_criterion, test_dataloader, device, epoch)
+            test_loss, _ = test_one_epoch(model, test_criterion, test_dataloader, device, epoch)
 
             model.check_best(test_loss, epoch)
 
@@ -131,46 +132,14 @@ def train(cfg):
 
     finally:
         # Save final model
-        model.save(cfg, epoch, "model_best", save_best=True)
+        if not start_epoch == cfg.epochs:
+            model.save(cfg, epoch, "model_best", save_best=True)
 
     # ===== Visualisation =====
 
-    model.load_best()
-    model.eval()
-    with torch.no_grad():
-        for batch in test_dataloader:
-            left = batch['left'].to(device)
-            right = batch['right'].to(device)
-            img = [left, right][:model.collab_n_agents]
-            
-            gt_l = batch['gt_left'].to(device)
-            gt_r = batch['gt_right'].to(device)
-            gt = [gt_l, gt_r][:model.collab_n_agents]
-            gt = torch.cat(gt, dim=3)
+    if model.best['model'] is not None: model.load_best()
 
-            h, w = gt.shape[2:]
-
-            # Forward pass
-            pred = model(img)
-            pred = torch.cat(pred, dim=3)  # Concatenate predictions from both agents
-            pred = pred.view(-1, 1, h, w)
-
-            # move to CPU for matplotlib
-            gt, pred = gt.cpu(), pred.cpu()
-
-            n = min(6, gt.size(0))
-            fig, axs = plt.subplots(n, 2, figsize=(4.5, n*1.5))
-
-            for i in range(n):
-                axs[i, 0].imshow(gt[i, 0], cmap='gray')
-                axs[i, 1].imshow(pred[i, 0], cmap='gray')
-                for j in range(2):
-                    axs[i, j].axis('off')
-
-            plt.tight_layout(pad=0.5)
-            plt.savefig('output_comparison.png')  # Save to file
-            plt.close()
-            break
+    vis_model_output(model, test_dataloader, output="example_output.png", device='cpu')
 
 
 def run():

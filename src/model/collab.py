@@ -4,6 +4,28 @@ import torch.nn.functional as F
 
 from .blocks import DecoderBlock
 
+
+class CollabConfig:
+    def __init__(self, 
+                 state_size=16, 
+                 num_heads=2, 
+                 encoding_dim=64,
+                 resolution=(28, 14),
+                 collab_n_agents=2,         # Number of collaborating agents
+                 collab_message_size=32,    # Size of the collaborative message
+                 collab_dec_depth=2,        # Depth of the collaborative decoder
+                 collab_messenger="CollaborativeMessage",
+                 ):       
+        self.state_size = state_size
+        self.num_heads = num_heads
+        self.encoding_dim = encoding_dim
+        self.img_size = resolution
+        self.collab_n_agents = collab_n_agents
+        self.collab_message_size = collab_message_size
+        self.collab_dec_depth = collab_dec_depth
+        self.collab_messenger = collab_messenger
+
+
 class SimpleCollaborativeMessage(nn.Module):
     def __init__(self, 
                  state_size,
