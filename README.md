@@ -50,9 +50,9 @@ Please download the MNIST dataset from [Kaggle](https://www.kaggle.com/datasets/
 
 Run your training via [`train.py`](src/train.py), which will also visualise the first six images from the frist test batch at the end of each training.
 
-    ```bash
-    python src/train.py
-    ```
+```bash
+python src/train.py
+```
 
 Configure hyperparameters (e.g. `batch_size`, `state_size`, collaboration module, message size) in [`config.yaml`](src/config.yaml)
 
