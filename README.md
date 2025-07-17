@@ -22,6 +22,8 @@ The collaboration involves two agents, each tasked with predicting the other's i
 
 ## :gear: Setup
 
+<details>
+
 ### Repository
 
 1. **Clone Repo**
@@ -43,6 +45,8 @@ The collaboration involves two agents, each tasked with predicting the other's i
 <details>
 
 Please download the MNIST dataset from [Kaggle](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) and place it into your data folder. Make sure to set the dataset path in [`config.yaml`](src/config.yaml) (current default: `"data/mnist"`)
+
+</details>
 
 </details>
 
